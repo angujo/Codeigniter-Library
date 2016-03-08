@@ -19,17 +19,28 @@ class Ctable
 
 	function __call($name, $arguments)
 	{
-		$items      = preg_split('/(?=[A-Z])/', $name);
-		$items      = explode('-', trim(implode('-', $items), '- '));
-		$function   = array_shift($items);
-		$tableName  = implode('_', array_map(function ($v) {
+		$items     = preg_split('/(?=[A-Z])/', $name);
+		$items     = explode('-', trim(implode('-', $items), '- '));
+		$function  = array_shift($items);
+		$tableName = implode('_', array_map(function ($v) {
 			return strtolower(trim($v));
 		}, $items));
 		if (!method_exists($this, $function) || !is_callable(array($this, $function))) {
-			return NULL;
+			$function = $function . '_' . $tableName;
+			if (!method_exists($this, $function) || !is_callable(array($this, $function))) {
+				$function = $name;
+				if (!method_exists($this, $function) || !is_callable(array($this, $function))) {
+					return NULL;
+				}
+			}
 		}
 		array_unshift($arguments, $tableName);
 		return call_user_func_array(array($this, $function), $arguments);
+	}
+
+	function lastQuery()
+	{
+		return $this->DB->last_query();
 	}
 
 	private function update($tableName, $conditions, array $details)
@@ -40,7 +51,11 @@ class Ctable
 		}
 		if (is_array($conditions)) {
 			foreach ($conditions as $column => $value) {
-				$this->DB->where($column, $value);
+				if (FALSE === $value || NULL === $value) {
+					$this->DB->where($column, NULL, FALSE);
+				} else {
+					$this->DB->where($column, $value);
+				}
 			}
 		} else {
 			$this->DB->where($tableName . '.id', (int)$conditions);
@@ -65,13 +80,88 @@ class Ctable
 	{
 		if (is_array($conditions)) {
 			foreach ($conditions as $column => $value) {
-				$this->DB->where($column, $value);
+				if (FALSE === $value || NULL === $value) {
+					$this->DB->where($column, NULL, FALSE);
+				} else {
+					$this->DB->where($column, $value);
+				}
 			}
 		} else {
 			$this->DB->where($tableName . '.id', (int)$conditions);
 		}
 		$this->DB->delete($tableName);
 		return $this->DB->affected_rows();
+	}
+
+	private function row($tableName, $conditions, array $search = array())
+	{
+		if (!empty($search) && 2 <= count($search) && !is_array($search[0]) && is_array($search[1])) {
+			$this->DB->group_start();
+			foreach ($search[1] as $column) {
+				$this->DB->or_like($column, $search[0]);
+			}
+			$this->DB->group_end();
+		}
+		if (is_array($conditions)) {
+			foreach ($conditions as $column => $value) {
+				if (FALSE === $value || NULL === $value) {
+					$this->DB->where($column, NULL, FALSE);
+				} else {
+					$this->DB->where($column, $value);
+				}
+			}
+		} else {
+			$this->DB->where($tableName . '.id', (int)$conditions);
+		}
+		$res = $this->DB->get($tableName, 1);
+		return 0 < $res->num_rows() ? $res->row() : FALSE;
+	}
+
+	private function rows($tableName, $conditions, $limit = 30, $start_at = 0, array $search = array())
+	{
+		if (!empty($search) && 2 <= count($search) && !is_array($search[0]) && is_array($search[1])) {
+			$this->DB->group_start();
+			foreach ($search[1] as $column) {
+				$this->DB->or_like($column, $search[0]);
+			}
+			$this->DB->group_end();
+		}
+		if (is_array($conditions)) {
+			foreach ($conditions as $column => $value) {
+				if (FALSE === $value || NULL === $value) {
+					$this->DB->where($column, NULL, FALSE);
+				} else {
+					$this->DB->where($column, $value);
+				}
+			}
+		} else {
+			$this->DB->where($tableName . '.id', (int)$conditions);
+		}
+		$res = $this->DB->get($tableName, $limit, $start_at);
+		return 0 < $res->num_rows() ? $res : FALSE;
+	}
+
+	private function count($tableName, $conditions, array $search = array())
+	{
+		if (!empty($search) && 2 <= count($search) && !is_array($search[0]) && is_array($search[1])) {
+			$this->DB->group_start();
+			foreach ($search[1] as $column) {
+				$this->DB->or_like($column, $search[0]);
+			}
+			$this->DB->group_end();
+		}
+		if (is_array($conditions)) {
+			foreach ($conditions as $column => $value) {
+				if (FALSE === $value || NULL === $value) {
+					$this->DB->where($column, NULL, FALSE);
+				} else {
+					$this->DB->where($column, $value);
+				}
+			}
+		} else {
+			$this->DB->where($tableName . '.id', (int)$conditions);
+		}
+		return $this->DB->count_all_Results($tableName);
 	}
 
 	function prepareDetails($tableName, array $posts, $skipScrutiny = TRUE)
