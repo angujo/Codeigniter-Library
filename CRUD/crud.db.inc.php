@@ -21,9 +21,9 @@ class CrudDB
 	function __construct()
 	{
 		self::$CI          =& get_instance();
-		self::$db_user     = LOCAL_SERVER ? 'root' : 'root';
-		self::$db_password = LOCAL_SERVER ? 'root' : 'root';
-		self::$db_host     = LOCAL_SERVER ? 'localhost' : 'localhost';
+		self::$db_user     = LOCAL_SERVER ? 'root' : 'dev_admin';
+		self::$db_password = LOCAL_SERVER ? 'root' : 'aXwVLrMat3zdCZ9s';
+		self::$db_host     = LOCAL_SERVER ? 'localhost' : '127.0.0.1';
 		self::$table       = new Ctable();
 	}
 
