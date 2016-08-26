@@ -240,4 +240,45 @@ class Form
 			break;
 		}*/
 	}
+	
+
+	private static function getDataType($dt)
+	{
+		$r=array('points'=>0,'type'=>'');
+		preg_match('/(\(([\d+\,\s+]+)\))/i',$dt, $matches);
+		if($matches){
+			$matches=explode(',', trim($matches,'() '));
+			$r['points']=1<count($matches)?$matches[1]:$matches[0];
+		}
+		$r['type']= trim(preg_replace('/(\()([\d+\,\s+]+)(\))//', '', str_ireplace(' unsigned', '', $dt)));
+		return $r;
+	}
+	
+	private function valueIntegrity($columnType,$value){
+		$type=self::getDataType($columnType);
+		switch ($type->type) {
+			case 'int':
+			case 'tinyint':
+			case 'smallint':
+			case 'bigint':
+				return (int)$value;
+				break;
+			case 'datetime':
+			case 'timestamp':
+				return date('Y-m-d H:i:s',strtotime($value));
+				break;
+			case 'float':
+			case 'double':
+			case 'decimal':
+				return (float)$value;
+				break;
+			case 'date':
+				return date('Y-m-d',strtotime($value));
+				break;
+			case 'time':
+				return date('H:i:s',strtotime($value));
+				break;
+		}
+		return $value;
+	}
 }
