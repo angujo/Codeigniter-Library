@@ -261,6 +261,7 @@ class Form
 			case 'tinyint':
 			case 'smallint':
 			case 'bigint':
+			case 'mediumint':
 				return (int)$value;
 				break;
 			case 'datetime':
@@ -278,7 +279,55 @@ class Form
 			case 'time':
 				return date('H:i:s',strtotime($value));
 				break;
+			case 'varbinary':
+			case 'char':
+			case 'varchar':
+			case 'year':
+				return substr($value,0, $type->points);
+				break;
 		}
 		return $value;
 	}
+	
+	
+	/**
+	 * 
+	 * 				id,int(10) unsigned,NO,PRI,(NULL),auto_increment
+name,varchar(255),YES,,(NULL),
+			bigint(20)
+binary(1)
+bit(1)
+blob
+			tinyint(1)
+			tinyint(1)
+			char(1)
+date
+datetime
+			decimal(10,0)
+			double
+enum('m','f')
+			float
+			int(11)
+longblob
+longtext
+mediumblob
+				mediumint(9)
+mediumtext
+			decimal(10,0)
+			double
+set('c','a')
+			smallint(6)
+text
+				time
+				timestamp
+tinyblob
+			tinyint(4)
+tinytext
+			varbinary(12)
+			varchar(233)
+			year(4)
+	 * 
+	 * 
+	 * 
+	 * */
 }
